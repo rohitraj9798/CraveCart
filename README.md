@@ -1,4 +1,4 @@
-🍔 CraveCart – Food Delivery Web Application
+CraveCart – Food Delivery Web Application
 
 CraveCart is a full-stack food delivery web application that allows users to browse restaurants, explore menus, and place orders seamlessly. The project is designed with a focus on clean UI, responsiveness, and efficient backend processing using RESTful APIs.
 
