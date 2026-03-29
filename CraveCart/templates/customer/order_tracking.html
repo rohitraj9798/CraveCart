@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }} Tracking — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+    :root {
+        --primary: #FF4B2B;
+        --primary-soft: #fff3f1;
+        --text-main: #1a1a1a;
+        --text-muted: #6b6b7b;
+        --bg-glass: rgba(255, 255, 255, 0.8);
+    }
+    .page-wrap { max-width: 900px; margin: 3rem auto; padding: 0 1.5rem; }
+    .glass-card { 
+        background: var(--bg-glass); 
+        backdrop-filter: blur(10px); 
+        border: 1px solid rgba(232, 227, 220, 0.5); 
+        border-radius: 24px; 
+        padding: 2.5rem; 
+        margin-bottom: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+    .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2.5rem; }
+    .order-id { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
+    .status-badge { 
+        padding: 0.6rem 1.4rem; 
+        border-radius: 100px; 
+        font-weight: 700; 
+        font-size: 0.85rem; 
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .status-Pending { background: #fef9c3; color: #854d0e; }
+    .status-Accepted { background: #dbeafe; color: #1d4ed8; }
+    .status-Preparing { background: #e0f2fe; color: #0369a1; }
+    .status-Out { background: #f3e8ff; color: #7e22ce; }
+    .status-Delivered { background: #dcfce7; color: #166534; }
+    
+    .tracker-container { position: relative; margin: 3rem 0; padding: 0 1rem; }
+    .tracker-line { 
+        position: absolute; 
+        top: 25px; 
+        left: 0; 
+        right: 0; 
+        height: 4px; 
+        background: #f3f4f6; 
+        z-index: 1; 
+        border-radius: 10px;
+    }
+    .tracker-line-progress { 
+        position: absolute; 
+        top: 25px; 
+        left: 0; 
+        height: 4px; 
+        background: var(--primary); 
+        z-index: 2; 
+        border-radius: 10px;
+        transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .tracker-steps { display: flex; justify-content: space-between; position: relative; z-index: 3; }
+    .step { display: flex; flex-direction: column; align-items: center; width: 100px; }
+    .step-circle { 
+        width: 54px; 
+        height: 54px; 
+        border-radius: 50%; 
+        background: white; 
+        border: 2px solid #f3f4f6; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        font-size: 1.4rem; 
+        transition: all 0.4s;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .step.active .step-circle { border-color: var(--primary); background: var(--primary-soft); transform: scale(1.1); }
+    .step.completed .step-circle { border-color: var(--primary); background: var(--primary); color: white; }
+    .step-label { margin-top: 1rem; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-align: center; }
+    .step.active .step-label { color: var(--primary); }
+    .step.completed .step-label { color: var(--text-main); }
+
+    .summary-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+    .items-list { margin-top: 1rem; }
+    .item-row { display: flex; justify-content: space-between; padding: 1rem 0; border-bottom: 1px solid #f3f4f6; }
+    .total-section { background: #fafafa; border-radius: 16px; padding: 1.5rem; margin-top: 2rem; }
+    .total-row { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted); }
+    .grand-total { border-top: 2px dashed #eee; margin-top: 1rem; padding-top: 1rem; font-size: 1.3rem; font-weight: 800; color: var(--primary); }
+
+    .delivery-info { margin-top: 1.5rem; padding: 1.2rem; background: #fbfbfb; border-radius: 16px; border-left: 4px solid var(--primary); }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.8; }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    .step.active .step-circle { animation: pulse 2s infinite ease-in-out; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+    <div style="margin-bottom: 1.5rem;">
+        <a href="{{ url_for('customer.orders') }}" style="color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.9rem;">← ALL ORDERS</a>
+    </div>
+
+    <div class="glass-card">
+        <div class="order-header">
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; font-weight: 700; text-transform: uppercase;">Tracking Order</span>
+                <div class="order-id">#{{ order.id }}</div>
+                <div style="color: var(--text-muted); font-size: 1rem; margin-top: 0.2rem;">{{ order.restaurant.name }} • {{ order.created_at.strftime('%I:%M %p') }}</div>
+            </div>
+            <span class="status-badge status-{{ order.status.split()[0] }}">{{ order.status }}</span>
+        </div>
+
+        {% set steps = ['Pending', 'Accepted', 'Preparing', 'Out for Delivery', 'Delivered'] %}
+        {% set icons = ['📋', '👨‍🍳', '🍲', '🛵', '🎁'] %}
+        {% set cur_idx = steps.index(order.status) if order.status in steps else 0 %}
+        {% set progress_pct = (cur_idx / (steps|length - 1)) * 100 %}
+
+        <div class="tracker-container">
+            <div class="tracker-line"></div>
+            <div class="tracker-line-progress" style="width: {{ progress_pct }}%;"></div>
+            <div class="tracker-steps">
+                {% for step in steps %}
+                    {% set i = loop.index0 %}
+                    <div class="step {{ 'completed' if i < cur_idx else 'active' if i == cur_idx else '' }}">
+                        <div class="step-circle">{{ icons[i] }}</div>
+                        <div class="step-label">{{ step }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if order.status not in ['Delivered', 'Cancelled', 'Rejected'] %}
+        <div style="text-align: center; background: var(--primary-soft); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 75, 43, 0.2);">
+            <p style="color: var(--primary); font-weight: 800; font-size: 1.1rem; margin: 0;">
+                🚀 Arriving in approximately <span style="font-size: 1.4rem;">{{ order.estimated_delivery }}</span> mins
+            </p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="summary-grid">
+        <div class="glass-card">
+            <h3 style="font-family: 'Syne', sans-serif; font-weight: 800; margin-bottom: 1.5rem;">Order Details</h3>
+            <div class="items-list">
+                {% for oi in order.items %}
+                <div class="item-row">
+                    <div>
+                        <span style="font-weight: 700; color: var(--text-main);">{{ oi.food_item.name }}</span>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">Qty: {{ oi.quantity }}</div>
+                    </div>
+                    <span style="font-weight: 800;">₹{{ oi.subtotal|int }}</span>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="delivery-info">
+                <div style="font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Delivery Address</div>
+                <div style="font-weight: 600; margin-top: 0.3rem;">{{ order.delivery_address }}</div>
+            </div>
+        </div>
+
+        <div class="glass-card">
+            <h3 style="font-family: 'Syne', sans-serif; font-weight: 800; margin-bottom: 1.5rem;">Summary</h3>
+            <div class="total-section">
+                <div class="total-row"><span>Subtotal</span><span>₹{{ order.total_amount|int }}</span></div>
+                <div class="total-row"><span>Delivery Fee</span><span>₹{{ order.delivery_fee|int }}</span></div>
+                <div class="grand-total">
+                    <span>Total Paid</span>
+                    <span>₹{{ (order.total_amount + order.delivery_fee)|int }}</span>
+                </div>
+            </div>
+            
+            <div style="margin-top: 1.5rem; text-align: center;">
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Payment Method</div>
+                <div style="font-weight: 700; color: var(--text-main);">{{ order.payment_method }}</div>
+            </div>
+
+            {% if order.status == 'Delivered' %}
+            <div style="margin-top: 2rem; border-top: 1px solid #eee; padding-top: 1.5rem;">
+                <p style="font-weight: 700; text-align: center;">Enjoyed your meal?</p>
+                <a href="#review" style="display: block; background: var(--primary); color: white; text-align: center; padding: 0.8rem; border-radius: 12px; text-decoration: none; font-weight: 800; margin-top: 0.5rem;">RATE RESTAURANT</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    {% if order.status not in ['Delivered', 'Cancelled', 'Rejected'] %}
+    setInterval(async () => {
+        try {
+            const res = await fetch('/api/order/{{ order.id }}/status');
+            const data = await res.json();
+            if (data.status !== '{{ order.status }}') {
+                location.reload();
+            }
+        } catch (e) {
+            console.error('Polling failed', e);
+        }
+    }, 10000);
+    {% endif %}
+</script>
+{% endblock %}

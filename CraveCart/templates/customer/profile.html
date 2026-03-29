@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% block title %}My Profile — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+:root {
+  --glass: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --accent: #FF4B2B;
+}
+
+.profile-container {
+  max-width: 900px;
+  margin: 4rem auto;
+  padding: 0 2rem;
+}
+
+.profile-card {
+  background: var(--glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+  border-radius: 30px;
+  padding: 3rem;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.05);
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: -100px;
+  right: -100px;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255,75,43,0.05) 0%, transparent 70%);
+  z-index: 0;
+}
+
+.avatar-section {
+  flex-shrink: 0;
+  text-align: center;
+  z-index: 1;
+}
+
+.avatar {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF4B2B, #FF416C);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: white;
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  border: 5px solid white;
+  box-shadow: 0 10px 25px rgba(255,75,43,0.2);
+}
+
+.profile-info {
+  flex: 1;
+  z-index: 1;
+}
+
+.profile-header {
+  margin-bottom: 2rem;
+}
+
+.profile-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  color: #1a1a1a;
+}
+
+.profile-role {
+  display: inline-block;
+  padding: 0.4rem 1.2rem;
+  background: rgba(255,75,43,0.1);
+  color: var(--accent);
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  margin-bottom: 2.5rem;
+}
+
+.info-item label {
+  display: block;
+  font-size: 0.85rem;
+  color: #888;
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-item span {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-profile {
+  padding: 0.8rem 2rem;
+  border-radius: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.btn-edit {
+  background: var(--accent);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255,75,43,0.3);
+}
+
+.btn-edit:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255,75,43,0.4);
+}
+
+.btn-orders {
+  background: white;
+  color: #333;
+  border: 1.5px solid #eee;
+}
+
+.btn-orders:hover {
+  background: #f8f8f8;
+  border-color: #ddd;
+}
+
+@media (max-width: 768px) {
+  .profile-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem;
+  }
+  .info-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  .profile-actions {
+    justify-content: center;
+  }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-card">
+        <div class="avatar-section">
+            <div class="avatar">
+                {{ current_user.name[0] | upper }}
+            </div>
+            <div class="profile-role">{{ current_user.role.replace('_', ' ') }}</div>
+        </div>
+        
+        <div class="profile-info">
+            <div class="profile-header">
+                <h1 class="profile-name">{{ current_user.name }}</h1>
+                <p style="color: #666; font-size: 1.1rem;">Account Member since {{ current_user.created_at.strftime('%Y') if current_user.created_at else '2024' }}</p>
+            </div>
+            
+            <div class="info-grid">
+                <div class="info-item">
+                    <label>Email Address</label>
+                    <span>{{ current_user.email }}</span>
+                </div>
+                <div class="info-item">
+                    <label>Phone Number</label>
+                    <span>{{ current_user.phone or 'Not provided' }}</span>
+                </div>
+                <div class="info-item" style="grid-column: span 2;">
+                    <label>Default Delivery Address</label>
+                    <span>{{ current_user.address or 'No address saved yet' }}</span>
+                </div>
+            </div>
+            
+            <div class="profile-actions">
+                <a href="#" class="btn-profile btn-edit">Edit Profile</a>
+                <a href="{{ url_for('customer.orders') }}" class="btn-profile btn-orders">View Order History</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

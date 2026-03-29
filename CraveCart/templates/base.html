@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}CraveCart — Food Delivered Fast{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --brand: #FF4B2B;
+      --brand-dark: #cc3820;
+      --brand-light: #fff3f1;
+      --accent: #FF9900;
+      --dark: #1a1a2e;
+      --surface: #ffffff;
+      --surface-alt: #f8f6f3;
+      --border: #e8e3dc;
+      --text: #1a1a2e;
+      --muted: #6b6b7b;
+      --success: #16a34a;
+      --radius: 16px;
+      --shadow: 0 4px 24px rgba(0,0,0,0.08);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'DM Sans', sans-serif; background: var(--surface-alt); color: var(--text); min-height: 100vh; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+    /* Navbar */
+    .navbar { background: white; border-bottom: 1px solid var(--border); padding: 0 2rem; height: 68px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000; box-shadow: 0 2px 16px rgba(0,0,0,0.06); }
+    .nav-brand { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--brand); text-decoration: none; letter-spacing: -0.5px; }
+    .nav-brand span { color: var(--dark); }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-link { text-decoration: none; color: var(--muted); font-weight: 500; font-size: 0.9rem; transition: color 0.2s; }
+    .nav-link:hover { color: var(--brand); }
+    .nav-cart { position: relative; background: var(--brand-light); color: var(--brand); border: none; padding: 0.5rem 1rem; border-radius: 50px; font-weight: 600; cursor: pointer; text-decoration: none; display: flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+    .cart-badge { background: var(--brand); color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+    .btn-primary { background: var(--brand); color: white; border: none; padding: 0.6rem 1.4rem; border-radius: 50px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: all 0.2s; }
+    .btn-primary:hover { background: var(--brand-dark); transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: var(--brand); border: 1.5px solid var(--brand); padding: 0.55rem 1.3rem; border-radius: 50px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; font-size: 0.9rem; transition: all 0.2s; }
+    .btn-outline:hover { background: var(--brand-light); }
+
+    /* Alerts */
+    .alerts { padding: 0 2rem; margin-top: 1rem; }
+    .alert { padding: 0.8rem 1.2rem; border-radius: 10px; margin-bottom: 0.5rem; font-size: 0.9rem; font-weight: 500; }
+    .alert-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .alert-danger { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .alert-warning { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+    .alert-info { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+
+    /* Cards */
+    .card { background: white; border-radius: var(--radius); border: 1px solid var(--border); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; }
+    .card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
+
+    /* Badges */
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-veg { background: #dcfce7; color: #16a34a; }
+    .badge-nonveg { background: #fee2e2; color: #dc2626; }
+    .badge-pending { background: #fef9c3; color: #854d0e; }
+    .badge-preparing { background: #dbeafe; color: #1d4ed8; }
+    .badge-delivered { background: #dcfce7; color: #166534; }
+    .badge-cancelled { background: #fee2e2; color: #991b1b; }
+    .badge-accepted { background: #e0f2fe; color: #0369a1; }
+    .badge-out { background: #f3e8ff; color: #7e22ce; }
+
+    /* Stars */
+    .stars { color: var(--accent); font-size: 0.8rem; }
+
+    /* Footer */
+    footer { background: var(--dark); color: #9ca3af; padding: 3rem 2rem 2rem; margin-top: 4rem; }
+    footer .footer-brand { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--brand); }
+    footer p { font-size: 0.85rem; line-height: 1.7; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .navbar { padding: 0 1rem; }
+      .nav-links .nav-link:not(.btn-primary):not(.btn-outline):not(.nav-cart) { display: none; }
+    }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<nav class="navbar">
+  <a href="{{ url_for('customer.home') }}" class="nav-brand">Crave<span>Cart</span></a>
+  <div class="nav-links">
+    <a href="{{ url_for('customer.restaurants') }}" class="nav-link">Restaurants</a>
+    {% if current_user.is_authenticated %}
+      {% if current_user.role == 'customer' %}
+        <a href="{{ url_for('customer.orders') }}" class="nav-link">My Orders</a>
+        <a href="{{ url_for('customer.cart') }}" class="nav-cart">
+          <i class="bi bi-bag2"></i> Cart
+          <span class="cart-badge" id="cart-count">0</span>
+        </a>
+      {% elif current_user.role == 'restaurant_owner' %}
+        <a href="{{ url_for('restaurant.dashboard') }}" class="nav-link">Dashboard</a>
+        <a href="{{ url_for('restaurant.orders') }}" class="nav-link">Orders</a>
+      {% elif current_user.role == 'admin' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="nav-link">Admin Panel</a>
+      {% endif %}
+      <span class="nav-link" style="color: var(--text);">Hi, {{ current_user.name.split()[0] }} 👋</span>
+      <a href="{{ url_for('customer.profile') }}" class="nav-link">Profile</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn-outline">Logout</a>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+      <a href="{{ url_for('auth.register') }}" class="btn-primary">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="alerts">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+</div>
+
+{% block content %}{% endblock %}
+
+<footer>
+  <div class="footer-brand">CraveCart 🍔</div>
+  <p style="margin-top: 0.5rem;">Delivering happiness, one bite at a time.</p>
+  <p style="margin-top: 1.5rem; font-size: 0.8rem;">© 2024 CraveCart. All rights reserved.</p>
+</footer>
+
+<script>
+async function updateCartCount() {
+  try {
+    const res = await fetch('/api/cart/count');
+    const data = await res.json();
+    const badge = document.getElementById('cart-count');
+    if (badge) badge.textContent = data.count;
+  } catch(e) {}
+}
+updateCartCount();
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

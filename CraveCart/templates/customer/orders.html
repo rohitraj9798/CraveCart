@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}My Orders — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.page-wrap { max-width: 900px; margin: 2rem auto; padding: 0 2rem; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem; }
+.order-card { background: white; border: 1px solid #e8e3dc; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.2rem; display: flex; gap: 1.5rem; align-items: center; flex-wrap: wrap; transition: box-shadow 0.2s; }
+.order-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+.order-img { width: 70px; height: 70px; border-radius: 14px; object-fit: cover; flex-shrink: 0; }
+.order-info { flex: 1; min-width: 200px; }
+.order-rest { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+.order-items-preview { color: #6b6b7b; font-size: 0.82rem; margin-top: 0.3rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 300px; }
+.order-date { color: #9ca3af; font-size: 0.8rem; margin-top: 0.3rem; }
+.order-amount { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; color: #FF4B2B; }
+.status-pill { padding: 0.35rem 0.9rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700; }
+.track-link { color: #FF4B2B; font-weight: 600; font-size: 0.85rem; text-decoration: none; border: 1.5px solid #FF4B2B; padding: 0.4rem 1rem; border-radius: 50px; transition: all 0.2s; white-space: nowrap; }
+.track-link:hover { background: #FF4B2B; color: white; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <h1 class="page-title">My Orders</h1>
+  {% if orders %}
+  {% for order in orders %}
+  <div class="order-card">
+    <img src="{{ order.restaurant.image_url or 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=200' }}" alt="{{ order.restaurant.name }}" class="order-img">
+    <div class="order-info">
+      <div class="order-rest">{{ order.restaurant.name }}</div>
+      <div class="order-items-preview">{{ order.items | map(attribute='food_item') | map(attribute='name') | join(', ') }}</div>
+      <div class="order-date">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+    </div>
+    <div style="text-align: right; flex-shrink: 0;">
+      <div class="order-amount">₹{{ (order.total_amount + order.delivery_fee)|int }}</div>
+      <div style="margin: 0.4rem 0;">
+        {% set sc = {'Pending':'#fef9c3','Accepted':'#dbeafe','Preparing':'#e0f2fe','Out for Delivery':'#f3e8ff','Delivered':'#dcfce7','Cancelled':'#fee2e2','Rejected':'#fee2e2'} %}
+        {% set tc = {'Pending':'#854d0e','Accepted':'#1d4ed8','Preparing':'#0369a1','Out for Delivery':'#7e22ce','Delivered':'#166534','Cancelled':'#991b1b','Rejected':'#991b1b'} %}
+        <span class="status-pill" style="background: {{ sc.get(order.status,'#f3f4f6') }}; color: {{ tc.get(order.status,'#374151') }};">{{ order.status }}</span>
+      </div>
+      <a href="{{ url_for('customer.order_tracking', order_id=order.id) }}" class="track-link">Track Order →</a>
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div style="text-align: center; padding: 5rem 2rem;">
+    <div style="font-size: 4rem;">📦</div>
+    <h2 style="font-family: 'Syne', sans-serif; margin-top: 1rem; font-size: 1.4rem; font-weight: 800;">No orders yet!</h2>
+    <p style="color: #6b6b7b; margin: 0.8rem 0 2rem;">Time to order something delicious.</p>
+    <a href="{{ url_for('customer.home') }}" style="background: #FF4B2B; color: white; padding: 0.8rem 2rem; border-radius: 50px; text-decoration: none; font-weight: 700;">Order Now →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Register — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.auth-wrap { min-height: calc(100vh - 68px); display: flex; align-items: center; justify-content: center; padding: 2rem; background: linear-gradient(135deg, #f8f6f3 0%, #fff3f1 100%); }
+.auth-card { background: white; border-radius: 24px; padding: 3rem; width: 100%; max-width: 480px; box-shadow: 0 16px 48px rgba(0,0,0,0.1); }
+.auth-logo { text-align: center; margin-bottom: 2rem; }
+.auth-logo span { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #FF4B2B; }
+.auth-title { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; margin-bottom: 0.3rem; }
+.auth-sub { color: #6b6b7b; font-size: 0.9rem; margin-bottom: 2rem; }
+.form-group { margin-bottom: 1.2rem; }
+label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.4rem; }
+input, select { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 0.95rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; background: #fafafa; }
+input:focus, select:focus { border-color: #FF4B2B; background: white; }
+.role-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; margin-bottom: 1.5rem; }
+.role-tab { padding: 0.7rem; border: 1.5px solid #e5e7eb; border-radius: 12px; text-align: center; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+.role-tab.selected { border-color: #FF4B2B; background: #fff3f1; color: #FF4B2B; }
+.btn-full { width: 100%; padding: 0.9rem; background: #FF4B2B; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: 'Syne', sans-serif; transition: all 0.2s; }
+.btn-full:hover { background: #cc3820; }
+.auth-switch { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: #6b6b7b; }
+.auth-switch a { color: #FF4B2B; font-weight: 600; text-decoration: none; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="auth-logo"><span>CraveCart 🍔</span></div>
+    <h2 class="auth-title">Create your account</h2>
+    <p class="auth-sub">Join thousands of food lovers!</p>
+    <form method="post" id="regForm">
+      <div class="role-tabs">
+        <div class="role-tab selected" onclick="setRole('customer', this)">🙋 I'm a Customer</div>
+        <div class="role-tab" onclick="setRole('restaurant_owner', this)">🍽️ Restaurant Owner</div>
+      </div>
+      <input type="hidden" name="role" id="roleInput" value="customer">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" name="name" placeholder="Your full name" required>
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" name="email" placeholder="you@example.com" required>
+      </div>
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="tel" name="phone" placeholder="+91 98765 43210">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Min. 6 characters" required>
+      </div>
+      <button type="submit" class="btn-full">Create Account →</button>
+    </form>
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('auth.login') }}">Login</a></p>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function setRole(role, el) {
+  document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('roleInput').value = role;
+}
+</script>
+{% endblock %}

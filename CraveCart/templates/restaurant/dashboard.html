@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block title %}Restaurant Dashboard — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.dash-wrap { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+.dash-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 2rem; }
+.dash-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; }
+.status-tag { padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.82rem; font-weight: 700; }
+.approved { background: #dcfce7; color: #16a34a; }
+.pending-approval { background: #fef9c3; color: #854d0e; }
+
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin-bottom: 2rem; }
+.metric { background: white; border: 1px solid #e8e3dc; border-radius: 16px; padding: 1.4rem; }
+.metric-icon { font-size: 2rem; margin-bottom: 0.6rem; }
+.metric-val { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: #FF4B2B; line-height: 1; }
+.metric-label { color: #6b6b7b; font-size: 0.82rem; margin-top: 0.3rem; font-weight: 500; }
+
+.section-card { background: white; border: 1px solid #e8e3dc; border-radius: 20px; padding: 1.5rem; margin-bottom: 1.5rem; }
+.section-head { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 1.2rem; display: flex; justify-content: space-between; align-items: center; }
+.nav-pill { background: #FF4B2B; color: white; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.82rem; font-weight: 700; text-decoration: none; }
+
+.order-row { display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 0; border-bottom: 1px solid #f3f4f6; flex-wrap: wrap; gap: 0.5rem; }
+.order-row:last-child { border-bottom: none; }
+.order-id { font-weight: 700; color: #FF4B2B; }
+.order-customer { font-size: 0.85rem; color: #374151; }
+.order-meta { font-size: 0.8rem; color: #9ca3af; }
+.order-amount { font-weight: 800; font-size: 0.95rem; }
+
+form.status-form { display: inline; }
+.status-select { padding: 0.35rem 0.7rem; border: 1.5px solid #e5e7eb; border-radius: 8px; font-size: 0.82rem; font-family: 'DM Sans', sans-serif; cursor: pointer; outline: none; }
+.update-btn { background: #1a1a2e; color: white; border: none; padding: 0.35rem 0.8rem; border-radius: 8px; font-size: 0.82rem; cursor: pointer; font-weight: 600; margin-left: 4px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="dash-wrap">
+  <div class="dash-header">
+    <div>
+      <div class="dash-title">{{ restaurant.name }}</div>
+      <div style="color: #6b6b7b; font-size: 0.9rem; margin-top: 0.3rem;">{{ restaurant.cuisine_type }} • {{ restaurant.city }}</div>
+    </div>
+    <div style="display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap;">
+      <span class="status-tag {{ 'approved' if restaurant.is_approved else 'pending-approval' }}">
+        {{ '✅ Approved' if restaurant.is_approved else '⏳ Pending Approval' }}
+      </span>
+      <a href="{{ url_for('restaurant.menu') }}" class="nav-pill">Manage Menu</a>
+      <a href="{{ url_for('restaurant.orders') }}" class="nav-pill" style="background: #1a1a2e;">All Orders</a>
+    </div>
+  </div>
+
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-icon">📦</div>
+      <div class="metric-val">{{ pending_count }}</div>
+      <div class="metric-label">Pending Orders</div>
+    </div>
+    <div class="metric">
+      <div class="metric-icon">💰</div>
+      <div class="metric-val">₹{{ total_revenue|int }}</div>
+      <div class="metric-label">Total Revenue</div>
+    </div>
+    <div class="metric">
+      <div class="metric-icon">🍔</div>
+      <div class="metric-val">{{ restaurant.food_items|length }}</div>
+      <div class="metric-label">Menu Items</div>
+    </div>
+    <div class="metric">
+      <div class="metric-icon">⭐</div>
+      <div class="metric-val">{{ restaurant.rating }}</div>
+      <div class="metric-label">Average Rating</div>
+    </div>
+  </div>
+
+  <div class="section-card">
+    <div class="section-head">
+      Recent Orders
+      <a href="{{ url_for('restaurant.orders') }}" style="font-size: 0.82rem; color: #FF4B2B; text-decoration: none; font-weight: 600;">View all →</a>
+    </div>
+    {% if orders %}
+    {% for order in orders[:8] %}
+    <div class="order-row">
+      <div>
+        <span class="order-id">#{{ order.id }}</span>
+        <span class="order-customer" style="margin-left: 0.6rem;">{{ order.customer.name }}</span>
+        <div class="order-meta">{{ order.created_at.strftime('%d %b, %I:%M %p') }} • {{ order.items|length }} items</div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;">
+        <span class="order-amount">₹{{ order.total_amount|int }}</span>
+        {% if order.status not in ['Delivered','Cancelled','Rejected'] %}
+        <form method="post" action="{{ url_for('restaurant.update_order', order_id=order.id) }}" class="status-form">
+          <select name="status" class="status-select">
+            {% for s in ['Pending','Accepted','Preparing','Out for Delivery','Delivered','Rejected'] %}
+            <option value="{{ s }}" {{ 'selected' if order.status == s }}>{{ s }}</option>
+            {% endfor %}
+          </select>
+          <button type="submit" class="update-btn">Update</button>
+        </form>
+        {% else %}
+        {% set tc = {'Delivered':'#166534','Cancelled':'#991b1b','Rejected':'#991b1b'} %}
+        {% set sc = {'Delivered':'#dcfce7','Cancelled':'#fee2e2','Rejected':'#fee2e2'} %}
+        <span style="background: {{ sc.get(order.status,'#f3f4f6') }}; color: {{ tc.get(order.status,'#374151') }}; padding: 0.3rem 0.8rem; border-radius: 50px; font-size: 0.78rem; font-weight: 700;">{{ order.status }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div style="text-align: center; padding: 2rem; color: #9ca3af;">No orders yet. Share your restaurant link to get started!</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

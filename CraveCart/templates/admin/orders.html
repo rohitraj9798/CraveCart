@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}All Orders — Admin{% endblock %}
+{% block extra_head %}
+<style>
+.page-wrap { max-width: 1300px; margin: 2rem auto; padding: 0 2rem; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem; }
+.admin-nav { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.admin-link { padding: 0.5rem 1.2rem; border: 1.5px solid #e5e7eb; border-radius: 50px; text-decoration: none; color: #374151; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; }
+.admin-link:hover, .admin-link.active { background: #1a1a2e; color: white; border-color: #1a1a2e; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e8e3dc; font-size: 0.85rem; }
+th { background: #f8f6f3; padding: 0.9rem 1rem; text-align: left; font-size: 0.75rem; font-weight: 700; color: #6b6b7b; text-transform: uppercase; letter-spacing: 0.5px; }
+td { padding: 0.8rem 1rem; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafaf9; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <h1 class="page-title">All Orders</h1>
+  <div class="admin-nav">
+    <a href="{{ url_for('admin.dashboard') }}" class="admin-link">Dashboard</a>
+    <a href="{{ url_for('admin.restaurants') }}" class="admin-link">Restaurants</a>
+    <a href="{{ url_for('admin.users') }}" class="admin-link">Users</a>
+    <a href="{{ url_for('admin.orders') }}" class="admin-link active">All Orders</a>
+  </div>
+  <table>
+    <thead>
+      <tr><th>#</th><th>Customer</th><th>Restaurant</th><th>Items</th><th>Amount</th><th>Payment</th><th>Status</th><th>Date</th></tr>
+    </thead>
+    <tbody>
+      {% for order in orders %}
+      {% set sc = {'Pending':'#fef9c3','Accepted':'#dbeafe','Preparing':'#e0f2fe','Out for Delivery':'#f3e8ff','Delivered':'#dcfce7','Cancelled':'#fee2e2','Rejected':'#fee2e2'} %}
+      {% set tc = {'Pending':'#854d0e','Accepted':'#1d4ed8','Preparing':'#0369a1','Out for Delivery':'#7e22ce','Delivered':'#166534','Cancelled':'#991b1b','Rejected':'#991b1b'} %}
+      <tr>
+        <td style="font-weight: 700; color: #FF4B2B;">#{{ order.id }}</td>
+        <td>{{ order.customer.name }}</td>
+        <td>{{ order.restaurant.name }}</td>
+        <td style="color: #6b6b7b;">{{ order.items|length }} item(s)</td>
+        <td style="font-weight: 700;">₹{{ (order.total_amount + order.delivery_fee)|int }}</td>
+        <td>{{ order.payment_method }}</td>
+        <td><span style="background: {{ sc.get(order.status,'#f3f4f6') }}; color: {{ tc.get(order.status,'#374151') }}; padding: 3px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700; white-space: nowrap;">{{ order.status }}</span></td>
+        <td style="color: #9ca3af; white-space: nowrap;">{{ order.created_at.strftime('%d %b %Y') }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

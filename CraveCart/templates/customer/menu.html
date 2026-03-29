@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+{% block title %}{{ restaurant.name }} — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.rest-header { background: white; border-bottom: 1px solid #e8e3dc; }
+.rest-hero { width: 100%; height: 280px; object-fit: cover; }
+.rest-info { max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; }
+.rest-name { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+.rest-badges { display: flex; gap: 0.7rem; flex-wrap: wrap; margin-top: 0.7rem; }
+.info-pill { background: #f8f6f3; border: 1px solid #e8e3dc; padding: 0.4rem 0.9rem; border-radius: 50px; font-size: 0.82rem; font-weight: 600; color: #374151; }
+.rating-big { background: #f0fdf4; color: #16a34a; padding: 0.5rem 1.2rem; border-radius: 50px; font-weight: 800; font-size: 1.1rem; }
+
+.menu-layout { max-width: 1200px; margin: 0 auto; padding: 2rem; display: grid; grid-template-columns: 240px 1fr; gap: 2rem; }
+@media (max-width: 768px) { .menu-layout { grid-template-columns: 1fr; } .cat-sidebar { display: none; } }
+.cat-sidebar { position: sticky; top: 88px; height: fit-content; }
+.cat-btn { display: block; width: 100%; text-align: left; padding: 0.6rem 1rem; border: none; background: transparent; border-radius: 10px; font-size: 0.9rem; font-weight: 500; cursor: pointer; transition: all 0.15s; color: #374151; margin-bottom: 0.3rem; }
+.cat-btn:hover, .cat-btn.active { background: #fff3f1; color: #FF4B2B; font-weight: 700; }
+
+.menu-section { margin-bottom: 3rem; }
+.menu-section h3 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e8e3dc; }
+.item-row { display: flex; gap: 1rem; background: white; border: 1px solid #e8e3dc; border-radius: 16px; padding: 1rem; margin-bottom: 1rem; transition: box-shadow 0.2s; }
+.item-row:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+.item-img { width: 100px; height: 90px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+.item-details { flex: 1; }
+.item-name { font-weight: 700; font-size: 1rem; margin-bottom: 0.3rem; }
+.item-desc { color: #6b6b7b; font-size: 0.82rem; line-height: 1.5; }
+.item-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 0.8rem; }
+.item-price { color: #FF4B2B; font-weight: 800; font-size: 1.1rem; }
+.qty-control { display: flex; align-items: center; gap: 8px; }
+.qty-btn { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #e5e7eb; background: white; cursor: pointer; font-size: 1.1rem; font-weight: 300; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.qty-btn.add-init { background: #FF4B2B; border-color: #FF4B2B; color: white; }
+.qty-btn:hover { background: #FF4B2B; border-color: #FF4B2B; color: white; }
+.qty-num { font-weight: 700; min-width: 20px; text-align: center; }
+
+.cart-sticky { position: fixed; bottom: 2rem; right: 2rem; z-index: 100; }
+.cart-float-btn { background: #FF4B2B; color: white; border: none; padding: 1rem 2rem; border-radius: 50px; font-weight: 700; font-size: 1rem; cursor: pointer; box-shadow: 0 8px 24px rgba(255,75,43,0.4); display: flex; align-items: center; gap: 0.7rem; text-decoration: none; transition: all 0.2s; }
+.cart-float-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(255,75,43,0.5); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="rest-header">
+  <img src="{{ restaurant.image_url or 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=1200' }}" alt="{{ restaurant.name }}" class="rest-hero">
+  <div class="rest-info">
+    <div>
+      <h1 class="rest-name">{{ restaurant.name }}</h1>
+      <div style="color: #6b6b7b; margin: 0.4rem 0;">{{ restaurant.cuisine_type }} • {{ restaurant.city }}</div>
+      <div class="rest-badges">
+        <span class="info-pill">🕐 {{ restaurant.delivery_time }}–{{ restaurant.delivery_time + 15 }} min</span>
+        <span class="info-pill">🚴 ₹{{ restaurant.delivery_fee|int }} delivery</span>
+        <span class="info-pill">📋 ₹{{ restaurant.min_order|int }} min order</span>
+        {% if restaurant.is_active %}<span class="info-pill" style="background: #dcfce7; color: #16a34a; border-color: #bbf7d0;">● Open Now</span>{% endif %}
+      </div>
+      {% if restaurant.description %}<p style="color: #6b6b7b; font-size: 0.9rem; margin-top: 0.8rem; max-width: 500px;">{{ restaurant.description }}</p>{% endif %}
+    </div>
+    <span class="rating-big">⭐ {{ restaurant.rating or '4.5' }}</span>
+  </div>
+</div>
+
+<div class="menu-layout">
+  <aside class="cat-sidebar">
+    <div style="background: white; border: 1px solid #e8e3dc; border-radius: 16px; padding: 1rem;">
+      <h4 style="font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Menu</h4>
+      <button class="cat-btn active" onclick="filterCat('all', this)">All Items</button>
+      {% for cat in categories %}
+      <button class="cat-btn" onclick="filterCat('{{ cat }}', this)">{{ cat }}</button>
+      {% endfor %}
+      <hr style="border: none; border-top: 1px solid #e8e3dc; margin: 1rem 0;">
+      <button class="cat-btn" onclick="filterVeg(true)">🟢 Veg Only</button>
+      <button class="cat-btn" onclick="filterVeg(false)">🔴 Non-Veg</button>
+    </div>
+  </aside>
+
+  <main>
+    {% set ns = namespace(current_cat='') %}
+    {% for item in items %}
+      {% if item.category != ns.current_cat %}
+        {% if ns.current_cat != '' %}</div>{% endif %}
+        {% set ns.current_cat = item.category %}
+        <div class="menu-section" data-cat="{{ item.category }}">
+        <h3>{{ item.category }}</h3>
+      {% endif %}
+      <div class="item-row" data-cat="{{ item.category }}" data-veg="{{ 'true' if item.is_veg else 'false' }}">
+        <img src="{{ item.image_url or 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200' }}" alt="{{ item.name }}" class="item-img">
+        <div class="item-details">
+          <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 0.4rem;">
+            <span style="width: 14px; height: 14px; border-radius: 3px; border: 1.5px solid {{ '#16a34a' if item.is_veg else '#dc2626' }}; display: inline-flex; align-items: center; justify-content: center;">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: {{ '#16a34a' if item.is_veg else '#dc2626' }};"></span>
+            </span>
+            <span style="color: #6b6b7b; font-size: 0.8rem;">{{ item.category }}</span>
+            {% if item.rating %}<span style="color: #f59e0b; font-size: 0.8rem;">⭐ {{ item.rating }}</span>{% endif %}
+          </div>
+          <div class="item-name">{{ item.name }}</div>
+          {% if item.desc %}<div class="item-desc">{{ item.description }}</div>{% endif %}
+          <div class="item-footer">
+            <span class="item-price">₹{{ item.price|int }}</span>
+            <div class="qty-control" id="ctrl-{{ item.id }}">
+              <button class="qty-btn add-init" onclick="addItem({{ item.id }})">+</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+    {% if items %}</div>{% endif %}
+    {% if not items %}
+    <div style="text-align: center; padding: 4rem; color: #6b6b7b;">
+      <div style="font-size: 3rem;">🍽️</div>
+      <p style="margin-top: 1rem;">Menu items coming soon!</p>
+    </div>
+    {% endif %}
+  </main>
+</div>
+
+<div class="cart-sticky" id="cartFloat" style="display: none;">
+  <a href="{{ url_for('customer.cart') }}" class="cart-float-btn">
+    🛒 View Cart (<span id="floatCount">0</span> items)
+  </a>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const cartQty = {};
+
+async function addItem(id) {
+  const res = await fetch(`/add-to-cart/${id}`, { method: 'POST' });
+  const data = await res.json();
+  cartQty[id] = (cartQty[id] || 0) + 1;
+  renderControl(id);
+  updateFloatingCart(data.count);
+}
+
+function renderControl(id) {
+  const ctrl = document.getElementById(`ctrl-${id}`);
+  const qty = cartQty[id] || 0;
+  if (qty === 0) {
+    ctrl.innerHTML = `<button class="qty-btn add-init" onclick="addItem(${id})">+</button>`;
+  } else {
+    ctrl.innerHTML = `
+      <button class="qty-btn" onclick="changeQty(${id}, -1)">−</button>
+      <span class="qty-num">${qty}</span>
+      <button class="qty-btn" onclick="changeQty(${id}, 1)">+</button>`;
+  }
+}
+
+async function changeQty(id, delta) {
+  const action = delta > 0 ? 'increment' : 'decrement';
+  const res = await fetch('/update-cart', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({item_id: id, action}) });
+  const data = await res.json();
+  cartQty[id] = Math.max(0, (cartQty[id] || 0) + delta);
+  renderControl(id);
+  updateFloatingCart(data.count);
+}
+
+function updateFloatingCart(count) {
+  document.getElementById('cart-count').textContent = count;
+  document.getElementById('floatCount').textContent = count;
+  document.getElementById('cartFloat').style.display = count > 0 ? 'block' : 'none';
+}
+
+function filterCat(cat, btn) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.item-row').forEach(row => {
+    row.style.display = (cat === 'all' || row.dataset.cat === cat) ? 'flex' : 'none';
+  });
+}
+function filterVeg(isVeg) {
+  document.querySelectorAll('.item-row').forEach(row => {
+    row.style.display = (row.dataset.veg === String(isVeg)) ? 'flex' : 'none';
+  });
+}
+</script>
+{% endblock %}

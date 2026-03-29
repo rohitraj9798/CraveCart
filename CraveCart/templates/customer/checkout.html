@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Checkout — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.page-wrap { max-width: 980px; margin: 2rem auto; padding: 0 2rem; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem; }
+.checkout-grid { display: grid; grid-template-columns: 1fr 340px; gap: 2rem; }
+@media (max-width: 768px) { .checkout-grid { grid-template-columns: 1fr; } }
+.form-card { background: white; border: 1px solid #e8e3dc; border-radius: 20px; padding: 1.8rem; }
+.section-head { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 1.2rem; padding-bottom: 0.6rem; border-bottom: 2px solid #f3f4f6; }
+.form-group { margin-bottom: 1.1rem; }
+label { font-size: 0.85rem; font-weight: 600; color: #374151; display: block; margin-bottom: 0.4rem; }
+input, select, textarea { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; background: #fafafa; }
+input:focus, select:focus, textarea:focus { border-color: #FF4B2B; background: white; }
+.payment-opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.7rem; }
+.pay-opt { padding: 0.8rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 12px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 8px; }
+.pay-opt input[type=radio] { accent-color: #FF4B2B; }
+.pay-opt:has(input:checked) { border-color: #FF4B2B; background: #fff3f1; color: #FF4B2B; }
+
+.order-summary { background: white; border: 1px solid #e8e3dc; border-radius: 20px; padding: 1.5rem; height: fit-content; position: sticky; top: 88px; }
+.summary-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; margin-bottom: 1rem; }
+.order-item-row { display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 0.88rem; border-bottom: 1px solid #f3f4f6; }
+.order-item-row:last-of-type { border-bottom: none; }
+.total-row { display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #e8e3dc; }
+.place-btn { width: 100%; padding: 0.9rem; background: #FF4B2B; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; font-family: 'Syne', sans-serif; margin-top: 1rem; transition: all 0.2s; }
+.place-btn:hover { background: #cc3820; transform: translateY(-1px); }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <h1 class="page-title">Checkout</h1>
+  <form method="post">
+  <div class="checkout-grid">
+    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+      <div class="form-card">
+        <div class="section-head">📍 Delivery Address</div>
+        <div class="form-group">
+          <label>Full Address</label>
+          <textarea name="address" rows="3" placeholder="House/Flat no., Street, Area..." required>{{ current_user.address or '' }}</textarea>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="section-head">💳 Payment Method</div>
+        <div class="payment-opts">
+          <label class="pay-opt"><input type="radio" name="payment" value="COD" checked> 💵 Cash on Delivery</label>
+          <label class="pay-opt"><input type="radio" name="payment" value="UPI"> 📱 UPI</label>
+          <label class="pay-opt"><input type="radio" name="payment" value="Card"> 💳 Card</label>
+          <label class="pay-opt"><input type="radio" name="payment" value="Wallet"> 👜 Wallet</label>
+        </div>
+      </div>
+      <div class="form-card">
+        <div class="section-head">📝 Special Instructions</div>
+        <div class="form-group">
+          <label>Any requests for the restaurant?</label>
+          <textarea name="instructions" rows="2" placeholder="e.g. Less spicy, extra sauce..."></textarea>
+        </div>
+      </div>
+    </div>
+
+    <aside>
+      <div class="order-summary">
+        <div class="summary-title">Order Summary</div>
+        {% for entry in items %}
+        <div class="order-item-row">
+          <span>{{ entry.item.name }} × {{ entry.qty }}</span>
+          <span>₹{{ entry.subtotal|int }}</span>
+        </div>
+        {% endfor %}
+        <div style="margin-top: 1rem;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.4rem; color: #6b6b7b;"><span>Subtotal</span><span>₹{{ total|int }}</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.4rem; color: #6b6b7b;"><span>Delivery fee</span><span>₹{{ delivery_fee|int }}</span></div>
+          <div style="display: flex; justify-content: space-between; font-size: 0.88rem; color: #6b6b7b;"><span>Tax (5%)</span><span>₹{{ (total * 0.05)|int }}</span></div>
+          <div class="total-row"><span>Total</span><span style="color: #FF4B2B;">₹{{ (grand_total + total * 0.05)|int }}</span></div>
+        </div>
+        <button type="submit" class="place-btn">🚀 Place Order</button>
+        <p style="text-align: center; color: #9ca3af; font-size: 0.75rem; margin-top: 0.8rem;">By placing order you agree to our Terms of Service</p>
+      </div>
+    </aside>
+  </div>
+  </form>
+</div>
+{% endblock %}

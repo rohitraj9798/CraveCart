@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Your Cart — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.page-wrap { max-width: 1000px; margin: 2rem auto; padding: 0 2rem; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; margin-bottom: 1.5rem; }
+.cart-layout { display: grid; grid-template-columns: 1fr 360px; gap: 2rem; }
+@media (max-width: 768px) { .cart-layout { grid-template-columns: 1fr; } }
+.cart-items { background: white; border: 1px solid #e8e3dc; border-radius: 20px; overflow: hidden; }
+.cart-item { display: flex; gap: 1rem; padding: 1.2rem; border-bottom: 1px solid #f3f4f6; align-items: center; }
+.cart-item:last-child { border-bottom: none; }
+.ci-img { width: 80px; height: 70px; border-radius: 12px; object-fit: cover; flex-shrink: 0; }
+.ci-name { font-weight: 700; font-size: 0.95rem; }
+.ci-rest { color: #6b6b7b; font-size: 0.8rem; margin-top: 0.2rem; }
+.ci-price { color: #FF4B2B; font-weight: 800; font-size: 1rem; margin-top: 0.5rem; }
+.qty-ctrl { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-shrink: 0; }
+.q-btn { width: 32px; height: 32px; border: 1.5px solid #e5e7eb; background: white; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.q-btn:hover { background: #FF4B2B; border-color: #FF4B2B; color: white; }
+.q-num { font-weight: 700; min-width: 28px; text-align: center; font-size: 1rem; }
+.del-btn { background: #fee2e2; color: #dc2626; border: none; width: 30px; height: 30px; border-radius: 50%; cursor: pointer; font-size: 0.9rem; margin-left: 0.5rem; transition: all 0.2s; }
+.del-btn:hover { background: #dc2626; color: white; }
+
+.order-summary { background: white; border: 1px solid #e8e3dc; border-radius: 20px; padding: 1.5rem; height: fit-content; position: sticky; top: 88px; }
+.summary-title { font-family: 'Syne', sans-serif; font-size: 1.2rem; font-weight: 800; margin-bottom: 1.2rem; }
+.summary-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-size: 0.9rem; color: #374151; }
+.summary-row.total { font-weight: 800; font-size: 1.1rem; color: #1a1a2e; border-top: 1px solid #e8e3dc; padding-top: 0.8rem; margin-top: 0.8rem; }
+.checkout-btn { display: block; width: 100%; padding: 0.9rem; background: #FF4B2B; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; margin-top: 1.2rem; font-family: 'Syne', sans-serif; transition: all 0.2s; }
+.checkout-btn:hover { background: #cc3820; }
+.empty-cart { text-align: center; padding: 5rem 2rem; }
+.empty-cart .icon { font-size: 4rem; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <h1 class="page-title">🛒 Your Cart</h1>
+  {% if items %}
+  <div class="cart-layout">
+    <div>
+      <div class="cart-items">
+        {% for entry in items %}
+        <div class="cart-item" id="cart-row-{{ entry.item.id }}">
+          <img src="{{ entry.item.image_url or 'https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=200' }}" alt="{{ entry.item.name }}" class="ci-img">
+          <div style="flex: 1; min-width: 0;">
+            <div class="ci-name">{{ entry.item.name }}</div>
+            <div class="ci-rest">{{ entry.item.restaurant.name }}</div>
+            <div class="ci-price">₹<span id="subtotal-{{ entry.item.id }}">{{ entry.subtotal|int }}</span></div>
+          </div>
+          <div class="qty-ctrl">
+            <button class="q-btn" onclick="changeQty({{ entry.item.id }}, {{ entry.item.price }}, 'decrement')">−</button>
+            <span class="q-num" id="qty-{{ entry.item.id }}">{{ entry.qty }}</span>
+            <button class="q-btn" onclick="changeQty({{ entry.item.id }}, {{ entry.item.price }}, 'increment')">+</button>
+            <button class="del-btn" onclick="removeItem({{ entry.item.id }})">✕</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <aside>
+      <div class="order-summary">
+        <div class="summary-title">Order Summary</div>
+        <div class="summary-row"><span>Subtotal</span><span>₹<span id="subtotal-total">{{ total|int }}</span></span></div>
+        <div class="summary-row"><span>Delivery fee</span><span>₹{{ delivery_fee|int }}</span></div>
+        <div class="summary-row"><span>Taxes & charges</span><span>₹{{ (total * 0.05)|int }}</span></div>
+        <div class="summary-row total"><span>Grand Total</span><span>₹<span id="grand-total">{{ (grand_total + total * 0.05)|int }}</span></span></div>
+        {% if current_user.is_authenticated %}
+          <a href="{{ url_for('customer.checkout') }}" class="checkout-btn">Proceed to Checkout →</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="checkout-btn">Login to Checkout →</a>
+        {% endif %}
+        <p style="text-align: center; color: #6b6b7b; font-size: 0.8rem; margin-top: 1rem;">🔒 Safe & secure checkout</p>
+      </div>
+    </aside>
+  </div>
+  {% else %}
+  <div class="empty-cart">
+    <div class="icon">🛒</div>
+    <h2 style="font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;">Your cart is empty</h2>
+    <p style="color: #6b6b7b; margin: 0.8rem 0 2rem;">Looks like you haven't added anything yet.</p>
+    <a href="{{ url_for('customer.restaurants') }}" class="btn-primary" style="background: #FF4B2B; color: white; padding: 0.8rem 2rem; border-radius: 50px; text-decoration: none; font-weight: 700;">Browse Restaurants →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+async function changeQty(id, price, action) {
+  const res = await fetch('/update-cart', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({item_id: id, action}) });
+  const data = await res.json();
+  document.getElementById('cart-count').textContent = data.count;
+  if (data.count === 0 || !document.getElementById(`qty-${id}`)) { location.reload(); return; }
+  const newQty = parseInt(document.getElementById(`qty-${id}`).textContent) + (action === 'increment' ? 1 : -1);
+  if (newQty <= 0) { location.reload(); return; }
+  document.getElementById(`qty-${id}`).textContent = newQty;
+  document.getElementById(`subtotal-${id}`).textContent = Math.round(price * newQty);
+  location.reload();
+}
+async function removeItem(id) {
+  await fetch('/update-cart', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({item_id: id, action: 'remove'}) });
+  location.reload();
+}
+</script>
+{% endblock %}

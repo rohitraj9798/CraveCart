@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Restaurants — CraveCart{% endblock %}
+{% block extra_head %}
+<style>
+.page-wrap { max-width: 1200px; margin: 2rem auto; padding: 0 2rem; }
+.search-section { background: white; border: 1px solid #e8e3dc; border-radius: 20px; padding: 1.5rem; margin-bottom: 2rem; }
+.search-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.search-input { flex: 1; min-width: 200px; padding: 0.7rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 50px; font-size: 0.9rem; font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.2s; }
+.search-input:focus { border-color: #FF4B2B; }
+.search-btn { background: #FF4B2B; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 50px; font-weight: 700; cursor: pointer; font-family: 'DM Sans', sans-serif; }
+.results-info { color: #6b6b7b; font-size: 0.9rem; margin-bottom: 1.5rem; }
+.restaurant-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+.rest-card { background: white; border-radius: 20px; overflow: hidden; border: 1px solid #e8e3dc; text-decoration: none; color: inherit; display: block; transition: all 0.2s; }
+.rest-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.1); }
+.rest-img { width: 100%; height: 190px; object-fit: cover; }
+.rest-body { padding: 1.3rem; }
+.rest-name { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; margin-bottom: 0.3rem; }
+.rest-cuisine { color: #6b6b7b; font-size: 0.83rem; }
+.rest-meta { display: flex; align-items: center; gap: 0.8rem; margin-top: 0.9rem; flex-wrap: wrap; }
+.rating-pill { background: #f0fdf4; color: #16a34a; padding: 3px 10px; border-radius: 50px; font-size: 0.8rem; font-weight: 700; display: flex; align-items: center; gap: 4px; }
+.meta-chip { color: #6b6b7b; font-size: 0.8rem; display: flex; align-items: center; gap: 4px; }
+.no-results { text-align: center; padding: 4rem 2rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div class="search-section">
+    <form class="search-row" method="get">
+      <input type="text" name="search" class="search-input" placeholder="🔍 Search restaurants..." value="{{ search }}">
+      <input type="text" name="city" class="search-input" placeholder="📍 City" style="max-width: 160px;" value="{{ request.args.get('city', '') }}">
+      <select name="cuisine" class="search-input" style="max-width: 180px; cursor: pointer;">
+        <option value="">All Cuisines</option>
+        {% for c in ['Indian','Chinese','Italian','Mexican','Fast Food','Continental','South Indian'] %}
+        <option value="{{ c }}" {{ 'selected' if request.args.get('cuisine') == c }}>{{ c }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit" class="search-btn">Search</button>
+    </form>
+  </div>
+
+  <p class="results-info">{{ restaurants|length }} restaurant{{ 's' if restaurants|length != 1 }} found{% if search %} for "<strong>{{ search }}</strong>"{% endif %}</p>
+
+  {% if restaurants %}
+  <div class="restaurant-grid">
+    {% for rest in restaurants %}
+    <a href="{{ url_for('customer.restaurant_menu', rid=rest.id) }}" class="rest-card">
+      <img src="{{ rest.image_url or 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400' }}" alt="{{ rest.name }}" class="rest-img">
+      <div class="rest-body">
+        <div class="rest-name">{{ rest.name }}</div>
+        <div class="rest-cuisine">{{ rest.cuisine_type or 'Multi-cuisine' }} • {{ rest.city }}</div>
+        {% if rest.description %}<div style="color: #9ca3af; font-size: 0.78rem; margin-top: 0.3rem; line-height: 1.4;">{{ rest.description[:70] }}{% if rest.description|length > 70 %}...{% endif %}</div>{% endif %}
+        <div class="rest-meta">
+          <span class="rating-pill">⭐ {{ rest.rating or '4.5' }}</span>
+          <span class="meta-chip">🕐 {{ rest.delivery_time }}–{{ rest.delivery_time + 15 }} min</span>
+          <span class="meta-chip">🚴 ₹{{ rest.delivery_fee|int }}</span>
+        </div>
+        <div style="margin-top: 0.8rem; padding-top: 0.8rem; border-top: 1px solid #f3f4f6; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.78rem; color: #9ca3af;">Min order: ₹{{ rest.min_order|int }}</span>
+          {% if rest.is_active %}<span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;">● Open</span>{% endif %}
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="no-results">
+    <div style="font-size: 3.5rem;">🔍</div>
+    <h2 style="font-family: 'Syne', sans-serif; margin-top: 1rem; font-weight: 800;">No restaurants found</h2>
+    <p style="color: #6b6b7b; margin-top: 0.5rem;">Try a different search or location.</p>
+    <a href="{{ url_for('customer.restaurants') }}" style="color: #FF4B2B; font-weight: 600; text-decoration: none; margin-top: 1rem; display: inline-block;">Clear filters →</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

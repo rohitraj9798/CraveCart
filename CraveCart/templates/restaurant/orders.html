@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Orders — Restaurant Dashboard{% endblock %}
+{% block extra_head %}
+<style>
+.page-wrap { max-width: 1100px; margin: 2rem auto; padding: 0 2rem; }
+.page-title { font-family: 'Syne', sans-serif; font-size: 1.8rem; font-weight: 800; margin-bottom: 1.5rem; }
+.filter-tabs { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+.filter-tab { padding: 0.45rem 1rem; border: 1.5px solid #e5e7eb; border-radius: 50px; font-size: 0.82rem; font-weight: 600; text-decoration: none; color: #374151; transition: all 0.2s; }
+.filter-tab:hover, .filter-tab.active { background: #FF4B2B; border-color: #FF4B2B; color: white; }
+.order-card { background: white; border: 1px solid #e8e3dc; border-radius: 16px; padding: 1.3rem; margin-bottom: 1rem; }
+.order-top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.7rem; margin-bottom: 1rem; }
+.order-id-big { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; }
+.order-time { color: #9ca3af; font-size: 0.82rem; }
+.items-preview { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1rem; }
+.item-tag { background: #f8f6f3; border: 1px solid #e8e3dc; padding: 0.25rem 0.7rem; border-radius: 50px; font-size: 0.8rem; color: #374151; }
+.order-footer { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.7rem; }
+.order-total { font-weight: 800; font-size: 1rem; color: #FF4B2B; }
+.update-form { display: flex; gap: 0.5rem; }
+.status-select { padding: 0.45rem 0.8rem; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 0.85rem; font-family: 'DM Sans', sans-serif; outline: none; cursor: pointer; }
+.update-btn { background: #1a1a2e; color: white; border: none; padding: 0.45rem 1rem; border-radius: 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.customer-info { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.83rem; color: #6b6b7b; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-wrap">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.5rem;">
+    <h1 class="page-title" style="margin-bottom: 0;">All Orders</h1>
+    <a href="{{ url_for('restaurant.dashboard') }}" style="color: #6b6b7b; text-decoration: none; font-size: 0.9rem;">← Dashboard</a>
+  </div>
+  <div class="filter-tabs">
+    <a href="{{ url_for('restaurant.orders') }}" class="filter-tab {{ 'active' if not status_filter }}">All</a>
+    {% for s in ['Pending','Accepted','Preparing','Out for Delivery','Delivered','Cancelled'] %}
+    <a href="{{ url_for('restaurant.orders', status=s) }}" class="filter-tab {{ 'active' if status_filter == s }}">{{ s }}</a>
+    {% endfor %}
+  </div>
+
+  {% if orders %}
+  {% for order in orders %}
+  <div class="order-card">
+    <div class="order-top">
+      <div>
+        <div class="order-id-big">#{{ order.id }}</div>
+        <div class="order-time">{{ order.created_at.strftime('%d %b %Y, %I:%M %p') }}</div>
+        <div class="customer-info" style="margin-top: 0.5rem;">
+          <span>👤 {{ order.customer.name }}</span>
+          {% if order.customer.phone %}<span>📞 {{ order.customer.phone }}</span>{% endif %}
+          <span>💳 {{ order.payment_method }}</span>
+        </div>
+      </div>
+      {% set sc = {'Pending':'#fef9c3','Accepted':'#dbeafe','Preparing':'#e0f2fe','Out for Delivery':'#f3e8ff','Delivered':'#dcfce7','Cancelled':'#fee2e2','Rejected':'#fee2e2'} %}
+      {% set tc = {'Pending':'#854d0e','Accepted':'#1d4ed8','Preparing':'#0369a1','Out for Delivery':'#7e22ce','Delivered':'#166534','Cancelled':'#991b1b','Rejected':'#991b1b'} %}
+      <span style="background: {{ sc.get(order.status,'#f3f4f6') }}; color: {{ tc.get(order.status,'#374151') }}; padding: 0.4rem 1rem; border-radius: 50px; font-size: 0.82rem; font-weight: 700;">{{ order.status }}</span>
+    </div>
+    <div class="items-preview">
+      {% for oi in order.items %}
+      <span class="item-tag">{{ oi.food_item.name }} ×{{ oi.quantity }}</span>
+      {% endfor %}
+    </div>
+    {% if order.delivery_address %}<div style="color: #6b6b7b; font-size: 0.8rem; margin-bottom: 0.8rem;">📍 {{ order.delivery_address }}</div>{% endif %}
+    {% if order.special_instructions %}<div style="background: #fff3f1; border-radius: 8px; padding: 0.5rem 0.8rem; font-size: 0.8rem; color: #854d0e; margin-bottom: 0.8rem;">📝 {{ order.special_instructions }}</div>{% endif %}
+    <div class="order-footer">
+      <span class="order-total">₹{{ (order.total_amount + order.delivery_fee)|int }}</span>
+      {% if order.status not in ['Delivered','Cancelled','Rejected'] %}
+      <form method="post" action="{{ url_for('restaurant.update_order', order_id=order.id) }}" class="update-form">
+        <select name="status" class="status-select">
+          {% for s in ['Pending','Accepted','Preparing','Out for Delivery','Delivered','Rejected','Cancelled'] %}
+          <option value="{{ s }}" {{ 'selected' if order.status == s }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="update-btn">Update →</button>
+      </form>
+      {% else %}
+      <span style="color: #9ca3af; font-size: 0.82rem;">Order {{ order.status }}</span>
+      {% endif %}
+    </div>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div style="text-align: center; padding: 4rem; color: #9ca3af;">
+    <div style="font-size: 3rem;">📭</div>
+    <p style="margin-top: 1rem;">No orders found for this filter.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
